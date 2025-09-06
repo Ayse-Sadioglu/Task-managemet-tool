@@ -20,3 +20,4 @@ public class Task {
     private boolean completed;
     private LocalDate dueDate;
 }
+//task eklediginde olusan model ozelikleri tablelara gidiyor

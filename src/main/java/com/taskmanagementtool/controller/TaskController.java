@@ -1,48 +1,51 @@
 package com.taskmanagementtool.controller;
 
 import com.taskmanagementtool.model.Task;
-import com.taskmanagementtool.service.TaskService;
+import com.taskmanagementtool.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:3000") // React ile bağlantı için
 @RestController
 @RequestMapping("/api/tasks")
-@CrossOrigin(origins = "http://localhost:3000")
 public class TaskController {
 
     @Autowired
-    private TaskService taskService;
+    private TaskRepository taskRepository;
 
-    @GetMapping
-    public List<Task> getAllTasks() {
-        return taskService.getAllTasks();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-        return taskService.getTaskById(id)
-                .map(task -> ResponseEntity.ok().body(task))
-                .orElse(ResponseEntity.notFound().build());
-    }
-
+    //  Yeni task oluştur
     @PostMapping
     public Task createTask(@RequestBody Task task) {
-        return taskService.saveTask(task);
+        return taskRepository.save(task);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task taskDetails) {
-        return taskService.updateTask(id, taskDetails)
-                .map(task -> ResponseEntity.ok().body(task))
-                .orElse(ResponseEntity.notFound().build());
+    //  Tüm task'leri getir
+    @GetMapping
+    public List<Task> getAllTasks() {
+        return taskRepository.findAll();
+       
     }
 
+    //  Task sil
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTask(@PathVariable Long id) {
-        taskService.deleteTask(id);
-        return ResponseEntity.ok().build();
+    public void deleteTask(@PathVariable Long id) {
+        taskRepository.deleteById(id);
+    }
+
+    //  Task güncelle
+    @PutMapping("/{id}")
+    public Task updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+
+        task.setTitle(updatedTask.getTitle());
+        task.setDescription(updatedTask.getDescription());
+        task.setTaskType(updatedTask.getTaskType());
+        task.setCompleted(updatedTask.isCompleted());
+        task.setDueDate(updatedTask.getDueDate());
+
+        return taskRepository.save(task);
     }
 }
